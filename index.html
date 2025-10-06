@@ -1,0 +1,69 @@
+import datetime
+
+def days_until_may_1():
+    """Calculates the total number of days from today until the next May 1st."""
+    
+    # Get today's date
+    today = datetime.date.today()
+    
+    # Determine the target year for May 1st
+    # If today is after May 1st, we aim for next year's May 1st
+    if today.month > 5 or (today.month == 5 and today.day >= 1):
+        target_year = today.year + 1
+    else:
+        target_year = today.year
+        
+    # Set the target date as May 1st of the determined year
+    may_1 = datetime.date(target_year, 5, 1)
+    
+    # Calculate the difference between the dates
+    time_difference = may_1 - today
+    
+    # Return the number of days
+    return time_difference.days
+
+# --- Global variable to hold the total ---
+# Calculate the initial total outside the function so it only runs once
+initial_total_days = days_until_may_1()
+current_total = initial_total_days
+
+def press_to_reduce():
+    """
+    Simulates a 'press' by reducing the current_total by 1.
+    
+    A global variable is used to maintain the state across calls.
+    """
+    global current_total  # Tells the function to modify the global variable
+    
+    if current_total > 0:
+        current_total -= 1
+        print(f"✅ Pressed! Remaining total reduced by 1.")
+    else:
+        print("🛑 Total is already 0. Cannot reduce further.")
+        
+    print(f"🗓️ Current total days remaining until May 1st: {current_total}")
+
+# ----------------------------------------------------------------------
+
+## How to Use the Program
+
+print(f"📅 **Initial Calculation:**")
+print(f"The date today is: {datetime.date.today()}")
+print(f"The calculated initial total days until May 1st is: {initial_total_days}\n")
+
+print("--- Starting Reduction Simulation ---\n")
+
+# Simulate a few presses
+print("Simulating first press:")
+press_to_reduce() 
+
+print("\nSimulating second press:")
+press_to_reduce()
+
+print("\nSimulating a third press:")
+press_to_reduce()
+
+# You can keep calling press_to_reduce() to continue the countdown!
+
+# To see the initial value again after reduction:
+# print(f"\nInitial total remains: {initial_total_days}")
