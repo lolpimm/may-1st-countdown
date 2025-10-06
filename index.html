@@ -1,69 +1,239 @@
-import datetime
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>May 1st Countdown Tracker</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configure Tailwind to use the Inter font family -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        :root {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom style for the mobile app feel */
+        #app-card {
+            max-width: 90%; /* Increase width slightly for mobile screens */
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
 
-def days_until_may_1():
-    """Calculates the total number of days from today until the next May 1st."""
-    
-    # Get today's date
-    today = datetime.date.today()
-    
-    # Determine the target year for May 1st
-    # If today is after May 1st, we aim for next year's May 1st
-    if today.month > 5 or (today.month == 5 and today.day >= 1):
-        target_year = today.year + 1
-    else:
-        target_year = today.year
+    <div id="app-card" class="bg-white shadow-2xl rounded-xl p-8 w-full max-w-sm sm:max-w-md text-center border-t-4 border-indigo-600 transition-all duration-300">
+
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-2">May 1st Countdown</h1>
+        <p class="text-gray-500 mb-6">Days remaining until the next May 1st.</p>
         
-    # Set the target date as May 1st of the determined year
-    may_1 = datetime.date(target_year, 5, 1)
-    
-    # Calculate the difference between the dates
-    time_difference = may_1 - today
-    
-    # Return the number of days
-    return time_difference.days
+        <!-- Days Display Area -->
+        <div class="bg-indigo-50 p-6 rounded-lg mb-8">
+            <p class="text-lg font-semibold text-indigo-700">Days Left:</p>
+            <div id="day-count-container" class="mt-1">
+                <span id="day-count" class="text-7xl font-black text-indigo-600 transition-transform transform duration-300 ease-in-out">
+                    --
+                </span>
+            </div>
+            <p id="initial-date-display" class="text-sm text-gray-600 mt-2">
+                (Initial total: Calculating...)
+            </p>
+        </div>
 
-# --- Global variable to hold the total ---
-# Calculate the initial total outside the function so it only runs once
-initial_total_days = days_until_may_1()
-current_total = initial_total_days
+        <!-- Action Buttons -->
+        <div class="flex flex-col space-y-4">
+            
+            <button id="decrement-button" 
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 px-4 rounded-xl shadow-lg transform transition-all duration-150 ease-in-out hover:scale-[1.02] active:scale-[0.98] disabled:bg-indigo-300 disabled:cursor-not-allowed text-lg"
+                    disabled>
+                Press (Reduce by 1)
+            </button>
+            
+            <button id="reset-button" 
+                    class="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-4 px-4 rounded-xl shadow-md transition-colors duration-150 ease-in-out hover:shadow-lg active:shadow-sm text-lg"
+                    disabled>
+                Reset Count
+            </button>
+        </div>
 
-def press_to_reduce():
-    """
-    Simulates a 'press' by reducing the current_total by 1.
-    
-    A global variable is used to maintain the state across calls.
-    """
-    global current_total  # Tells the function to modify the global variable
-    
-    if current_total > 0:
-        current_total -= 1
-        print(f"✅ Pressed! Remaining total reduced by 1.")
-    else:
-        print("🛑 Total is already 0. Cannot reduce further.")
+        <!-- Status Message -->
+        <div id="status-message" class="mt-6 p-3 text-sm rounded-lg text-green-700 bg-green-100 hidden">
+            Count successfully reduced!
+        </div>
+
+    </div>
+
+    <script>
+        // Key for local storage persistence
+        const COUNT_STORAGE_KEY = 'may1stCountdownDays';
         
-    print(f"🗓️ Current total days remaining until May 1st: {current_total}")
+        // Global state variables
+        let initialDays = 0;
+        let currentDays = 0;
+        
+        // DOM elements
+        const dayCountEl = document.getElementById('day-count');
+        const initialDateDisplayEl = document.getElementById('initial-date-display');
+        const decrementButton = document.getElementById('decrement-button');
+        const resetButton = document.getElementById('reset-button');
+        const statusMessageEl = document.getElementById('status-message');
 
-# ----------------------------------------------------------------------
+        /**
+         * Calculates the total number of days from today until the next May 1st.
+         * @returns {number} The difference in days.
+         */
+        function calculateDaysUntilMay1() {
+            const today = new Date();
+            let targetYear = today.getFullYear();
 
-## How to Use the Program
+            // Check if May 1st has already passed this year
+            const may1stThisYear = new Date(targetYear, 4, 1); // Month is 0-indexed (4 is May)
 
-print(f"📅 **Initial Calculation:**")
-print(f"The date today is: {datetime.date.today()}")
-print(f"The calculated initial total days until May 1st is: {initial_total_days}\n")
+            if (today > may1stThisYear) {
+                targetYear += 1; // Aim for next year
+            }
 
-print("--- Starting Reduction Simulation ---\n")
+            const may1stNext = new Date(targetYear, 4, 1);
+            
+            // Calculate time difference in milliseconds
+            const diffTime = may1stNext.getTime() - today.getTime();
+            
+            // Convert milliseconds to days (1000ms * 60s * 60m * 24h)
+            // Math.ceil is used to ensure the day count includes the partial day today
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            return diffDays;
+        }
 
-# Simulate a few presses
-print("Simulating first press:")
-press_to_reduce() 
+        /**
+         * Saves the current day count to local storage for persistence across sessions.
+         */
+        function saveCount() {
+            try {
+                localStorage.setItem(COUNT_STORAGE_KEY, currentDays.toString());
+            } catch (error) {
+                console.error("Could not save data to local storage:", error);
+                // In a true iOS app, this data would be saved natively (e.g., using UserDefaults).
+            }
+        }
 
-print("\nSimulating second press:")
-press_to_reduce()
+        /**
+         * Loads the saved day count from local storage, or uses the initial calculation.
+         */
+        function loadCount() {
+            try {
+                const savedCount = localStorage.getItem(COUNT_STORAGE_KEY);
+                if (savedCount !== null) {
+                    const loadedCount = parseInt(savedCount, 10);
+                    // Only load the saved count if it's less than or equal to the re-calculated initial days.
+                    // This handles when a new year rolls over, ensuring the count is always correct or lower.
+                    if (loadedCount <= initialDays) {
+                        currentDays = loadedCount;
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error("Could not load data from local storage:", error);
+            }
+            // If no saved count or if it's outdated, start from the freshly calculated initial total
+            currentDays = initialDays;
+        }
 
-print("\nSimulating a third press:")
-press_to_reduce()
 
-# You can keep calling press_to_reduce() to continue the countdown!
+        /**
+         * Updates the UI display with the current day count.
+         */
+        function updateUI() {
+            // Apply a slight scale-down/up animation for visual feedback on update
+            dayCountEl.classList.add('scale-95');
+            setTimeout(() => {
+                dayCountEl.textContent = currentDays;
+                dayCountEl.classList.remove('scale-95');
+            }, 50); // Small delay for the transition effect
 
-# To see the initial value again after reduction:
-# print(f"\nInitial total remains: {initial_total_days}")
+            // Handle button states
+            if (currentDays <= 0) {
+                decrementButton.disabled = true;
+                decrementButton.textContent = "Goal Reached! 🎉";
+                showStatus('success', 'The countdown is complete!');
+            } else {
+                decrementButton.disabled = false;
+                decrementButton.textContent = "Press (Reduce by 1)";
+            }
+
+            if (currentDays < initialDays) {
+                resetButton.disabled = false;
+            } else {
+                resetButton.disabled = true;
+            }
+        }
+
+        /**
+         * Shows a temporary status message to the user.
+         * @param {string} type - 'success' or 'error'.
+         * @param {string} message - The message to display.
+         */
+        function showStatus(type, message) {
+            statusMessageEl.textContent = message;
+            statusMessageEl.classList.remove('hidden', 'bg-green-100', 'text-green-700', 'bg-red-100', 'text-red-700');
+            
+            if (type === 'success') {
+                statusMessageEl.classList.add('bg-green-100', 'text-green-700');
+            } else if (type === 'error') {
+                statusMessageEl.classList.add('bg-red-100', 'text-red-700');
+            }
+
+            // Hide the message after 3 seconds
+            setTimeout(() => {
+                statusMessageEl.classList.add('hidden');
+            }, 3000);
+        }
+
+        /**
+         * Event handler for the decrement button.
+         */
+        function handleDecrement() {
+            if (currentDays > 0) {
+                currentDays -= 1;
+                saveCount(); // Save the new count
+                updateUI();
+                showStatus('success', 'Count successfully reduced by 1!');
+            } else {
+                showStatus('error', 'Cannot reduce the count below zero.');
+            }
+        }
+
+        /**
+         * Event handler for the reset button.
+         */
+        function handleReset() {
+            currentDays = initialDays;
+            saveCount(); // Save the reset count
+            updateUI();
+            showStatus('success', 'Countdown reset to the initial total.');
+        }
+
+        /**
+         * Initialize the application on load.
+         */
+        function initApp() {
+            initialDays = calculateDaysUntilMay1();
+            
+            // Load the count after calculating the initial value
+            loadCount();
+
+            const today = new Date();
+            initialDateDisplayEl.textContent = `(Today is ${today.toDateString()})`;
+            
+            // Set initial display
+            updateUI();
+
+            // Attach event listeners
+            decrementButton.addEventListener('click', handleDecrement);
+            resetButton.addEventListener('click', handleReset);
+        }
+
+        // Start the application when the script loads
+        initApp();
+    </script>
+</body>
+</html>
